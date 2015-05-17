@@ -5,44 +5,45 @@
 # Based on
 # http://machinelearningmastery.com/tutorial-to-implement-k-nearest-neighbors-in-python-from-scratch/
 
-import arff
+
 import math
-import operator
 import heapq
-
-def defineClass_kNN ( neighbours ):
-    # tuples class and counter
-        classes = []
-
-    for x in neighbours:
-        classes [ x[1] ] = classes [ x[1] ] + 1
-
-    return classes
+from collections import Counter
 
 
-def getNeighbours ( trainingSet, testInstance, k ):
-        dist = []
-        neighbours = []
-        length = len ( testInstance ) -1
+def defineClass_kNN(neighbours):
+    return Counter(elem[1] for elem in neighbours).most_common()[0][0];
 
-        for x in range ( len ( trainingSet ) ):
-            dist.append ( ( eucDist ( trainingSet [x], testInstance, length ), testInstance.Class ) )
 
-        heapq.heapify ( dist )
+def getNeighbours(trainingSet, instance, k):
+    dist = []
+    length = len(instance) - 1
 
-        return heapq.nsmallest ( k, dist )
+    for x in range(len(trainingSet)):
+        dist.append((eucDist(trainingSet[x], instance, length), trainingSet[x].Class))
 
-def eucDist ( i1, i2, length ):
+    heapq.heapify(dist)
+
+    return heapq.nsmallest(k, dist)
+
+
+def eucDist(i1, i2, length):
     dist = 0
 
-    for x in range ( length ):
-        dist += pow ( ( i1[x] - i2[x] ), 2 )
-    return math.sqrt ( dist )
+    for x in range(length):
+        dist += pow((i1[x] - i2[x]), 2)
+    return math.sqrt(dist)
 
-instances = []
 
-for row in arff.load ('ionosphere.arff' ):
-   instances.append ( row ); 
+# Main functions
 
-print instances[1].Class
-print getNeighbours ( instances, instances[0], 5 )
+def numericalPrediction(trainingSet, instance, k):
+    return predictedNumber;
+
+
+def classPrediction(trainingSet, instance, k):
+    predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
+    return predictedClass;
+
+
+# --------------------------------
