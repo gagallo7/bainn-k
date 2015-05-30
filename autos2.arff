@@ -86,7 +86,7 @@
 %  23. peak-rpm:                 continuous from 4150 to 6600.
 %  24. city-mpg:                 continuous from 13 to 49.
 %  25. highway-mpg:              continuous from 16 to 54.
-%  26. price:                    continuous from 5118 to 45400.
+%  26. price (Class):                    continuous from 5118 to 45400.
 % 
 %    Attribute #:   Number of instances missing a value:
 %    2.             41
@@ -122,7 +122,7 @@
 @attribute peak-rpm real
 @attribute city-mpg real
 @attribute highway-mpg real
-@attribute price real
+@attribute Class real
 @attribute symboling { -3, -2, -1, 0, 1, 2, 3}
 @data
 164,audi,gas,std,four,sedan,fwd,front,99.8,176.6,66.2,54.3,2337,ohc,four,109,mpfi,3.19,3.4,10,102,5500,24,30,13950,2
