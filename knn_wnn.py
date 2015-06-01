@@ -23,7 +23,7 @@ def getNeighbours(trainingSet, instance, k):
     length = len(instance) - 1
 
     for x in range(len(trainingSet)):
-        dist.append((eucDist(trainingSet[x], instance, length), trainingSet[x].Class))
+        dist.append((eucDist(trainingSet[x], instance, length), trainingSet[x]._values[-1]))
 
     heapq.heapify(dist)
 
@@ -84,7 +84,7 @@ class Classification ( Problem ):
 
     def evaluate ( self, lhs, newInstances, k ):
         rhs = self.prediction ( newInstances, lhs, k )
-        self.accuracy += lhs.Class == rhs
+        self.accuracy += lhs._values[-1] == rhs
 
     def endEvaluation ( self ):
         self.accuracy = self.accuracy / float ( len ( self.instances ) )
@@ -102,7 +102,7 @@ class NumericalPrediction ( Problem ):
         Problem.__init__ ( self, filename )
         
         # Used for relative absolute error
-        self.average = sum ([ c.Class for c in self.instances ]) / len ( self.instances )
+        self.average = sum ([ float(c._values[-1]) for c in self.instances ]) / len ( self.instances )
 
     # The predicted number is the average of the 
     # k nearest neighbours
@@ -110,7 +110,7 @@ class NumericalPrediction ( Problem ):
         predictedNumber = 0
 
         for n in getNeighbours(trainingSet, instance, k):
-            predictedNumber += n[1]
+            predictedNumber += float ( n[1] )
         
         predictedNumber = predictedNumber / float ( k )
 
@@ -119,7 +119,7 @@ class NumericalPrediction ( Problem ):
     def evaluate ( self, lhs, newInstances, k ):
         rhs = self.prediction ( newInstances, lhs, k )
 
-        self.meanAbsError += abs ( lhs.Class - rhs )
+        self.meanAbsError += abs ( float ( lhs._values[-1] ) - rhs )
         self.relativeAbsError += abs ( rhs - self.average )
         self.rootedSquaredError += ( rhs - self.average )**2
 
