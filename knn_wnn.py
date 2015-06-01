@@ -35,12 +35,13 @@ def eucDist(i1, i2, length):
 
     for x in range(length):
         if type ( i1[x] ) != type ( str() ):
-            dist += (i1[x] - i2[x])**2
+            dist += abs ( (i1[x] - i2[x])**16.0 )
         else:
             if ( i1[x] != i2[x] ):
                 dist += 1
 
-    return math.sqrt(dist)
+    #return math.sqrt(dist)
+    return float ( dist**(1/16.0) )
 
 
 # Main classes
@@ -75,7 +76,7 @@ class Classification ( Problem ):
         self.fp = 0
         self.fn = 0
         self.fp = 0
-        Problem.__init__ ( self, filename )
+        Problem.__init__ ( self, filename )     # super
         
     def prediction( self, trainingSet, instance, k):
         predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
