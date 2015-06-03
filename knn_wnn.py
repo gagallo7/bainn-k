@@ -45,7 +45,7 @@ def eucDist(i1, i2, length, dictProbs):
             if ( i1[x] != i2[x] ):
             #     dist += 1
                 vdmresult = vdm(i1[x], i2[x], dictProbs, 2)
-                print "VDM: %d"%vdmresult
+                print "VDM: %f"%vdmresult
                 dist += vdmresult
                 #dist += vdm(i1[x], i2[x], dictProbs, 2)*100
 
@@ -88,7 +88,7 @@ def vdm(val1, val2, dictProbs, n):
         if(val1 in attrubutesPerClass) and (val2 in attrubutesPerClass):
             cost = abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])*1.0
             print "P(%s | %s) - P(%s | %s) = %f " %(index, val1, index, val2, cost)
-            total += (abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])*1.0)**n
+            total += abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n*1.0
     return total
 
 
