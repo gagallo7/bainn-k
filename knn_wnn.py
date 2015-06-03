@@ -22,26 +22,73 @@ def getNeighbours(trainingSet, instance, k):
     dist = []
     length = len(instance) - 1
 
+    dictProbs = probsForVDM (trainingSet)
+
     for x in range(len(trainingSet)):
-        dist.append((eucDist(trainingSet[x], instance, length), trainingSet[x]._values[-1]))
+        dist.append((eucDist(trainingSet[x], instance, length, dictProbs), trainingSet[x]._values[-1]))
 
     heapq.heapify(dist)
 
     return heapq.nsmallest(k, dist)
 
 # Euclidean distance
-def eucDist(i1, i2, length):
+def eucDist(i1, i2, length, dictProbs):
     dist = 0
 
     for x in range(length):
         if type ( i1[x] ) != type ( str() ):
-            dist += abs ( (i1[x] - i2[x])**16.0 )
+            dist += abs ( (i1[x] - i2[x])**2.0 )
+            pointo = (abs ( (i1[x] - i2[x])**2.0 ))
+            print "Points: %s"% pointo
         else:
+
             if ( i1[x] != i2[x] ):
-                dist += 1
+            #     dist += 1
+                vdmresult = vdm(i1[x], i2[x], dictProbs, 2)*10000
+                print "VDM: %d"%vdmresult
+                dist += vdmresult
+                #dist += vdm(i1[x], i2[x], dictProbs, 2)*100
 
     #return math.sqrt(dist)
-    return float ( dist**(1/16.0) )
+    return float ( dist**(1/2.0) )
+
+def probsForVDM (trainingSet):
+    dictProbs = {}
+    numberValues = {}
+
+    for tuple in trainingSet:
+        for k, attr in enumerate(tuple._values[:-1]):
+            if type ( attr ) == type ( str() ):
+                tClass = tuple._values[-1]
+                if attr not in numberValues:
+                    numberValues[attr] = 1
+                else:
+                    numberValues[attr] += 1
+
+                # Number of value/class
+                if tClass not in dictProbs:
+                    dictProbs[tClass] = {}
+                    dictProbs[tClass][attr] = 1
+                elif attr not in dictProbs[tClass]:
+                    dictProbs[tClass][attr] = 1
+                else:
+                    dictProbs[tClass][attr] += 1
+
+    # Prob = number of values with class / total number of values
+    for k,attrubutesPerClass in dictProbs.items():
+        for key, attribute in attrubutesPerClass.items():
+            attrubutesPerClass[key] /= numberValues[key] * 1.0
+
+    # print dictProbs
+    return dictProbs
+
+def vdm(val1, val2, dictProbs, n):
+    total = 0
+    for index, attrubutesPerClass in dictProbs.items():
+        if(val1 in attrubutesPerClass) and (val2 in attrubutesPerClass):
+            total += abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n
+
+    return total
 
 
 # Main classes

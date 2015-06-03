@@ -37,7 +37,7 @@ c = Classification("ionosphere.arff")
 num = NumericalPrediction("autos2.arff")
 
 print "Testing classification data..."
-loocv_classes( c, 5 )
+#loocv_classes( c, 5 )
 
 print "\nTesting numerical data..."
 loocv_classes( num, 5 )
