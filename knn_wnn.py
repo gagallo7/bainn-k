@@ -12,6 +12,9 @@ import arff
 import math
 import heapq
 from collections import Counter
+from copy import deepcopy
+
+EPSILON = 1e-7
 
 # Return the most common class from the k-nearest neighbours
 def defineClass_kNN(neighbours):
@@ -27,6 +30,7 @@ def getNeighbours(trainingSet, instance, k):
     for x in range(len(trainingSet)):
         dist.append((eucDist(trainingSet[x], instance, length, dictProbs), trainingSet[x]._values[-1]))
 
+    #print dist
     heapq.heapify(dist)
 
     return heapq.nsmallest(k, dist)
@@ -39,15 +43,14 @@ def eucDist(i1, i2, length, dictProbs):
         if type ( i1[x] ) != type ( str() ):
             dist += abs ( (i1[x] - i2[x])**2.0 )
             pointo = (abs ( (i1[x] - i2[x])**2.0 ))
-            print "Points: %s"% pointo
+            #print "Points: (%f %f) %s"% (i1[x], i2[x], pointo)
         else:
 
             if ( i1[x] != i2[x] ):
-            #     dist += 1
-                vdmresult = vdm(i1[x], i2[x], dictProbs, 2)
-                print "VDM: %f"%vdmresult
-                dist += vdmresult
-                #dist += vdm(i1[x], i2[x], dictProbs, 2)*100
+                dist += 1
+                #vdmresult = vdm(i1[x], i2[x], dictProbs, 2)
+                #dist += vdmresult
+                #dist += vdm(i1[x], i2[x], dictProbs, 2)
 
     #return math.sqrt(dist)
     return float ( dist**(1/2.0) )
@@ -79,16 +82,17 @@ def probsForVDM (trainingSet):
         for key, attribute in attrubutesPerClass.items():
             attrubutesPerClass[key] /= numberValues[key] * 1.0
 
-    # print dictProbs
+#    # print dictProbs
     return dictProbs
 
 def vdm(val1, val2, dictProbs, n):
     total = 0
     for index, attrubutesPerClass in dictProbs.items():
         if(val1 in attrubutesPerClass) and (val2 in attrubutesPerClass):
-            cost = abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])*1.0
-            print "P(%s | %s) - P(%s | %s) = %f " %(index, val1, index, val2, cost)
+            cost = abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n*1.0
+            #print "P(%s | %s) - P(%s | %s) = %f " %(index, val1, index, val2, cost)
             total += abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n*1.0
+    #print "Total: %f" % (total)
     return total
 
 
@@ -107,8 +111,10 @@ class Problem:
     def normalizeNumericalAttr ( self ):
         # storing the minimum and the maximum value
         # of each attribute in dictionary
-        minValues = self.instances[0]._values[:]
-        maxValues = self.instances[0]._values[:]
+        #minValues = self.instances[0]._values[:]
+        #maxValues = self.instances[0]._values[:]
+        minValues = deepcopy ( self.instances[0]._values )
+        maxValues = deepcopy ( self.instances[0]._values )
 
         # finding the minimum and the maximum
         for tuple in self.instances:
@@ -122,7 +128,7 @@ class Problem:
         for tuple in self.instances:
             for k, attr in enumerate(tuple._values[:-1]):
                 if type ( attr ) != type ( str() ):
-                    tuple._values[k] = (tuple._values[k]-minValues[k])/(maxValues[k]-minValues[k])
+                    tuple._values[k] = (tuple._values[k]-minValues[k])/(EPSILON+maxValues[k]-minValues[k])
 
         return
 
