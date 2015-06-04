@@ -52,28 +52,6 @@ def eucDist(i1, i2, length, dictProbs):
     #return math.sqrt(dist)
     return float ( dist**(1/2.0) )
 
-def normalizationNumericalAttr (trainingSet):
-    # storing the minimum and the maximum value
-    # of each attribute in dictionary
-    minValues = trainingSet[0]._values[:]
-    maxValues = trainingSet[0]._values[:]
-
-    # finding the minimum and the maximum
-    for tuple in trainingSet:
-        for k, attr in enumerate(tuple._values[:-1]):
-            if type ( attr ) != type ( str() ):
-                minValues[k] = min ( minValues[k], attr )
-                maxValues[k] = max ( maxValues[k], attr )
-
-    # applying normalization
-    # x' = (x-min)/(max-min)
-    for tuple in trainingSet:
-        for k, attr in enumerate(tuple._values[:-1]):
-            if type ( attr ) != type ( str() ):
-                tuple._values[k] = (tuple._values[k]-minValues[k])/(maxValues[k]-minValues[k])
-
-    return
-
 def probsForVDM (trainingSet):
     dictProbs = {}
     numberValues = {}
@@ -124,6 +102,30 @@ class Problem:
 
         for row in arff.load(filename):
             self.instances.append(row);
+
+    # Normalizes the numerical attributes
+    def normalizeNumericalAttr ( self ):
+        # storing the minimum and the maximum value
+        # of each attribute in dictionary
+        minValues = self.instances[0]._values[:]
+        maxValues = self.instances[0]._values[:]
+
+        # finding the minimum and the maximum
+        for tuple in self.instances:
+            for k, attr in enumerate(tuple._values[:-1]):
+                if type ( attr ) != type ( str() ):
+                    minValues[k] = min ( minValues[k], attr )
+                    maxValues[k] = max ( maxValues[k], attr )
+
+        # applying normalization
+        # x' = (x-min)/(max-min)
+        for tuple in self.instances:
+            for k, attr in enumerate(tuple._values[:-1]):
+                if type ( attr ) != type ( str() ):
+                    tuple._values[k] = (tuple._values[k]-minValues[k])/(maxValues[k]-minValues[k])
+
+        return
+
 
     def prediction( self, trainingSet, instance, k):
         return

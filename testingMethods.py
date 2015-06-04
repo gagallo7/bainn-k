@@ -36,8 +36,13 @@ def loocv_classes(problem, k):
 c = Classification("ionosphere.arff")
 num = NumericalPrediction("autos2.arff")
 
+# Normalize example
+print num.instances[0]
+num.normalizeNumericalAttr()
+print num.instances[0]
+
 print "Testing classification data..."
 #loocv_classes( c, 5 )
 
 print "\nTesting numerical data..."
-loocv_classes( num, 5 )
+#loocv_classes( num, 5 )
