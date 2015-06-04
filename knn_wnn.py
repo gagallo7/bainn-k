@@ -20,6 +20,37 @@ EPSILON = 1e-7
 def defineClass_kNN(neighbours):
     return Counter(elem[1] for elem in neighbours).most_common()[0][0];
 
+def weightedClassification(neighbours):
+    rank={}
+    for neighbour in neighbours:
+        # if ()
+        if neighbour[0] == 0: return neighbour[1]
+        if neighbour[1] not in rank:
+            rank[neighbour[1]] = 1.0/(float(neighbour[0])**2)
+        else:
+            rank[neighbour[1]] += 1.0/(float(neighbour[0])**2)
+
+    return max(rank, key=lambda key: rank[key])
+
+def weightedNumericalPrediction(neighbours):
+    totalWeight = 0
+    sumElementTimesWeight = 0
+    for neighbour in neighbours:
+        if neighbour[0] == 0: return neighbour[1]
+        weight = 1.0/(float(neighbour[0])**2)
+        totalWeight += weight
+        sumElementTimesWeight += neighbour[1] * weight
+
+    return sumElementTimesWeight/totalWeight
+
+def numericalPrediction(neighbours):
+    predictedNumber = 0
+
+    for n in neighbours:
+        predictedNumber += float ( n[1] )
+
+    return predictedNumber/ float ( neighbours.__len__() )
+
 # Defines who will be the neighbours for an instance
 def getNeighbours(trainingSet, instance, k):
     dist = []
@@ -33,6 +64,7 @@ def getNeighbours(trainingSet, instance, k):
     #print dist
     heapq.heapify(dist)
 
+    #print heapq.nsmallest(k, dist)
     return heapq.nsmallest(k, dist)
 
 # Euclidean distance
@@ -82,7 +114,7 @@ def probsForVDM (trainingSet):
         for key, attribute in attrubutesPerClass.items():
             attrubutesPerClass[key] /= numberValues[key] * 1.0
 
-#    # print dictProbs
+    # print dictProbs
     return dictProbs
 
 def vdm(val1, val2, dictProbs, n):
@@ -157,7 +189,8 @@ class Classification ( Problem ):
         Problem.__init__ ( self, filename )     # super
         
     def prediction( self, trainingSet, instance, k):
-        predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
+        #predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
+        predictedClass = weightedClassification(getNeighbours(trainingSet, instance, k))
         return predictedClass;
 
     def evaluate ( self, lhs, newInstances, k ):
@@ -185,13 +218,9 @@ class NumericalPrediction ( Problem ):
     # The predicted number is the average of the 
     # k nearest neighbours
     def prediction( self, trainingSet, instance, k):
-        predictedNumber = 0
 
-        for n in getNeighbours(trainingSet, instance, k):
-            predictedNumber += float ( n[1] )
-        
-        predictedNumber = predictedNumber / float ( k )
-
+        predictedNumber = weightedNumericalPrediction(getNeighbours(trainingSet, instance, k))
+        #predictedNumber = numericalPrediction(getNeighbours(trainingSet, instance, k))
         return predictedNumber;
 
     def evaluate ( self, lhs, newInstances, k ):
