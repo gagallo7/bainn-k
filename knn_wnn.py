@@ -14,16 +14,17 @@ import heapq
 from collections import Counter
 from copy import deepcopy
 
+# Avoiding division by zero
 EPSILON = 1e-7
 
 # Return the most common class from the k-nearest neighbours
 def defineClass_kNN(neighbours):
     return Counter(elem[1] for elem in neighbours).most_common()[0][0];
 
+# w-nn
 def weightedClassification(neighbours):
     rank={}
     for neighbour in neighbours:
-        # if ()
         if neighbour[0] == 0: return neighbour[1]
         if neighbour[1] not in rank:
             rank[neighbour[1]] = 1.0/(float(neighbour[0])**2)
@@ -32,6 +33,7 @@ def weightedClassification(neighbours):
 
     return max(rank, key=lambda key: rank[key])
 
+# w-nn
 def weightedNumericalPrediction(neighbours):
     totalWeight = 0
     sumElementTimesWeight = 0
@@ -182,26 +184,24 @@ class Classification ( Problem ):
 
     def __init__(self, filename):
         self.accuracy = 0
-        self.tp = 0
-        self.fp = 0
-        self.fn = 0
-        self.fp = 0
         Problem.__init__ ( self, filename )     # super
         
-    def prediction( self, trainingSet, instance, k):
-        #predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
-        predictedClass = weightedClassification(getNeighbours(trainingSet, instance, k))
+    def prediction( self, trainingSet, instance, k, type):
+        if ( type == 'knn' ):
+            predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
+        else:
+            predictedClass = weightedClassification(getNeighbours(trainingSet, instance, k))
         return predictedClass;
 
-    def evaluate ( self, lhs, newInstances, k ):
-        rhs = self.prediction ( newInstances, lhs, k )
+    def evaluate ( self, lhs, newInstances, k, type='knn' ):
+        rhs = self.prediction ( newInstances, lhs, k, type )
         self.accuracy += lhs._values[-1] == rhs
 
     def endEvaluation ( self ):
         self.accuracy = self.accuracy / float ( len ( self.instances ) )
 
     def printError ( self ):
-        accStr = "Accuracy: {}".format ( self.accuracy )
+        accStr = "Accuracy: {0:2.4f}%".format ( self.accuracy*100 )
         print accStr
 
 # Specializes Problem into a Regression problem
@@ -216,15 +216,16 @@ class NumericalPrediction ( Problem ):
         self.average = sum ([ float(c._values[-1]) for c in self.instances ]) / len ( self.instances )
 
     # The predicted number is the average of the 
-    # k nearest neighbours
-    def prediction( self, trainingSet, instance, k):
-
-        predictedNumber = weightedNumericalPrediction(getNeighbours(trainingSet, instance, k))
-        #predictedNumber = numericalPrediction(getNeighbours(trainingSet, instance, k))
+    # k nearest neighbours or wnn
+    def prediction( self, trainingSet, instance, k, type ):
+        if ( type == 'knn' ):
+            predictedNumber = numericalPrediction(getNeighbours(trainingSet, instance, k))
+        else:
+            predictedNumber = weightedNumericalPrediction(getNeighbours(trainingSet, instance, k))
         return predictedNumber;
 
-    def evaluate ( self, lhs, newInstances, k ):
-        rhs = self.prediction ( newInstances, lhs, k )
+    def evaluate ( self, lhs, newInstances, k, type='knn' ):
+        rhs = self.prediction ( newInstances, lhs, k, type )
 
         self.meanAbsError += abs ( float ( lhs._values[-1] ) - rhs )
         self.relativeAbsError += abs ( rhs - self.average )
@@ -238,9 +239,9 @@ class NumericalPrediction ( Problem ):
         self.rootedSquaredError = math.sqrt ( self.rootedSquaredError / float ( len ( self.instances ) ) )
 
     def printError ( self ):
-        meanAbsoluteErrorStr = "Mean absolute error: {}".format ( self.meanAbsError )
-        relativeAbsErrorStr = "Relative absolute error: {}".format ( self.relativeAbsError )
-        rootedSquaredErrorStr = "Rooted Squared error: {}".format ( self.rootedSquaredError )
+        meanAbsoluteErrorStr =  "Mean absolute error:     {0:2.4f}".format ( self.meanAbsError )
+        relativeAbsErrorStr =   "Relative absolute error:   {0:2.4f}%".format ( self.relativeAbsError*100 )
+        rootedSquaredErrorStr = "Root Squared error:      {0:2.4f}".format ( self.rootedSquaredError )
         print meanAbsoluteErrorStr
         print relativeAbsErrorStr
         print rootedSquaredErrorStr
