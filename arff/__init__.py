@@ -94,6 +94,7 @@ def GenerateRowBase(field_names):
             self._data = dict(zip(field_names, self._values))
             # numbered order access
             self._data.update(enumerate(self._values))
+            self._fields = field_names
 
         def __getattr__(self, key):
             if key in self._data:
@@ -102,7 +103,7 @@ def GenerateRowBase(field_names):
                 return object.__getattr__(self, key)
 
         def __getitem__(self, key):
-            return self._data[key]
+            return self._values[key]
 
         def __repr__(self):
             return '<Row(%s)>' % ','.join([repr(i) for i in self._values])
