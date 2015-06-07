@@ -16,26 +16,53 @@ from collections import deque
 
 import re
 
+# Parser for user's command
 def parse ( c, num, op ):
-    parsed = re.match(r'([cn]) * ([wk]).* (\d*)', op, re.M|re.I )
+    optArgs = True
+    parsed = re.match(r'([cn]) * ([wk]).* (\d+).* ([yn]).* ([\.\d]+)', op, re.M|re.I )
 
+    # Without optional args
+    if parsed == None:
+        parsed = re.match(r'([cn]) * ([wk]).* (\d+)', op, re.M|re.I )
+        optArgs = False
+
+    # Error
     if parsed == None:
         raise NameError('Bad command syntax')
 
+    if int ( parsed.group(3) ) < 1:
+        raise NameError('Bad k value')
+
     command = []
     msg = ""
+    details = []
 
     command.append ( int ( parsed.group(3) ) )
 
     if ( parsed.group(2)[0] == 'w' ):
-        msg += "Using WNN "
+        msg += "Using W-NN "
         command.append ( 'wnn' )
     else:
-        msg += "Using KNN "
+        msg += "Using K-NN "
         command.append ( 'knn' )
 
     msg += "with k = {}".format ( int ( parsed.group (3) ) )
 
+    if ( optArgs ):
+        if float ( parsed.group(5) ) < 0:
+            raise NameError('Bad Ln value: Ln < 0')
+                
+        msg += "|| Ln-norm of " + parsed.group(5) + ", "
+        details.append ( float ( parsed.group(5) ) )
+
+        if ( parsed.group(4) == 'y' ):
+            msg += " VDM enabled"
+            details.append (True)
+        else:
+            msg += " VDM disabled"
+            details.append (False)
+
+    command.append ( details )
     print msg
 
     if ( parsed.group(1)[0] == 'c' ):
@@ -43,9 +70,34 @@ def parse ( c, num, op ):
     else:
         loocv_classes ( num, *command )
 
+# Make the program flexible to user's input
+def iterativeMode () :
+    op = ''
+
+    while ( op != 'q' ):
+        print "\nSyntax: <problem> <nn-type> <k-value> <VDM> <Ln-norm>"
+        print "Required parameters"
+        print "\tproblem: 'c' for Classification, 'n' for Numerical Regression"
+        print "\tnn-type: 'w' for w-nn, 'k' for k-nn"
+        print "\tk-value: integer >= 1"
+        print "Optional parameters (Both required)"
+        print "\tVDM: 'y' or 'n'. (default 'n')"
+        print "\t\tUse value difference measure to calculate distance among nominal attributes"
+        print "\tLn-norm: real number >= 0. (default 2.0)" 
+        print "\t\tUsed to calculate distances."
+        print "\t"
+
+        op = raw_input("Command ('q' to quit): ")
+
+        if ( op == 'q' ):
+            break
+        elif op:
+            parse (c, num, op)
+        
+    print ''
+
 # Leave-one-out-cross-validation
-def loocv_classes(problem, k, type='knn'):
-    print "Nearest neighbour type: {}".format ( type )
+def loocv_classes(problem, k, type='knn', details = []):
 
     # Too expensive to copy the whole list
     newInstances = deque(problem.instances)
@@ -55,7 +107,7 @@ def loocv_classes(problem, k, type='knn'):
         # Getting the new training set without one instance
         testInstance = newInstances.popleft() # first instance coming out of list
 
-        problem.evaluate ( testInstance, newInstances, k, type )
+        problem.evaluate ( testInstance, newInstances, k, type, details )
         newInstances.append ( testInstance ) # same instance comes back as the last element
 
     problem.endEvaluation()
@@ -66,37 +118,5 @@ def loocv_classes(problem, k, type='knn'):
 c = Classification("ionosphere.arff")
 num = NumericalPrediction("autos3.arff")
 
-#test = [5,'wnn']
-
-#loocv_classes ( c, *test )
-
-op = ''
-
-while ( op != 'q' ):
-    print "\nSyntax: <problem> <nn-type> <k-value>"
-    print "\tproblem: c for Classification, n for Numerical Regression"
-    print "\t\tnn-type: w for w-nn, k for k-nn"
-    print "\t\t\tk-value: integer >= 1"
-
-    op = raw_input("Command: ")
-
-    parse (c, num, op)
-    
-        
-'''
-print "Testing classification data..."
-loocv_classes( c, 5, 'wnn' )
-
-print "\nTesting numerical data..."
-loocv_classes( num, 5, 'wnn' )
-
-print "\nNormalizing..."
-c.normalizeNumericalAttr()
-num.normalizeNumericalAttr()
-
-print "Testing classification data..."
-loocv_classes( c, 5, 'wnn' )
-
-print "\nTesting numerical data..."
-loocv_classes( num, 5, 'wnn' )
-'''
+# Activating iterative mode
+iterativeMode()

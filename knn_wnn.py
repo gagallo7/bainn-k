@@ -21,10 +21,20 @@ EPSILON = 1e-7
 def defineClass_kNN(neighbours):
     return Counter(elem[1] for elem in neighbours).most_common()[0][0];
 
+# Return the average of the k-nn values
+def numericalPredictionKNN(neighbours):
+    predictedNumber = 0
+
+    for n in neighbours:
+        predictedNumber += float ( n[1] )
+
+    return predictedNumber/ float ( neighbours.__len__() )
+
 # w-nn
 def weightedClassification(neighbours):
     rank={}
     for neighbour in neighbours:
+        # No Distance case, assume the same class
         if neighbour[0] == 0: return neighbour[1]
         if neighbour[1] not in rank:
             rank[neighbour[1]] = 1.0/(float(neighbour[0])**2)
@@ -34,6 +44,7 @@ def weightedClassification(neighbours):
     return max(rank, key=lambda key: rank[key])
 
 # w-nn
+# Return the weighted average of the k-nn values
 def weightedNumericalPrediction(neighbours):
     totalWeight = 0
     sumElementTimesWeight = 0
@@ -45,50 +56,51 @@ def weightedNumericalPrediction(neighbours):
 
     return sumElementTimesWeight/totalWeight
 
-def numericalPrediction(neighbours):
-    predictedNumber = 0
-
-    for n in neighbours:
-        predictedNumber += float ( n[1] )
-
-    return predictedNumber/ float ( neighbours.__len__() )
 
 # Defines who will be the neighbours for an instance
-def getNeighbours(trainingSet, instance, k):
+def getNeighbours(trainingSet, instance, k, details):
     dist = []
     length = len(instance) - 1
 
     dictProbs = probsForVDM (trainingSet)
 
     for x in range(len(trainingSet)):
-        dist.append((eucDist(trainingSet[x], instance, length, dictProbs), trainingSet[x]._values[-1]))
-
-    #print dist
+        if details == []:
+            dist.append((LnDist(trainingSet[x], instance, length, dictProbs), trainingSet[x]._values[-1]))
+        else:
+            dist.append((LnDist(trainingSet[x], instance, length, dictProbs, *details), trainingSet[x]._values[-1]))
+                
     heapq.heapify(dist)
 
-    #print heapq.nsmallest(k, dist)
     return heapq.nsmallest(k, dist)
 
-# Euclidean distance
-def eucDist(i1, i2, length, dictProbs):
+# L-n distance
+def LnDist(i1, i2, length, dictProbs, n = 2, useVDM = False):
     dist = 0
+    n = float (n)
+    # Treating Manhattan-Distance Ln = 0
+    div = float (1/n) if n > 0 else 1
 
     for x in range(length):
         if type ( i1[x] ) != type ( str() ):
-            dist += abs ( (i1[x] - i2[x])**2.0 )
-            pointo = (abs ( (i1[x] - i2[x])**2.0 ))
+            dist += abs ( (i1[x] - i2[x])**n )
+            #pointo = (abs ( (i1[x] - i2[x])**n ))
             #print "Points: (%f %f) %s"% (i1[x], i2[x], pointo)
         else:
 
             if ( i1[x] != i2[x] ):
-                dist += 1
+                if ( useVDM ):
+                    dist += vdm(i1[x], i2[x], dictProbs, n)
+                else:
+                    dist += 1
                 #vdmresult = vdm(i1[x], i2[x], dictProbs, 2)
                 #dist += vdmresult
-                #dist += vdm(i1[x], i2[x], dictProbs, 2)
 
     #return math.sqrt(dist)
-    return float ( dist**(1/2.0) )
+    return float ( dist**div )
 
+# Storing the probabilities attribute given class
+# P(attr|class) used for VDM
 def probsForVDM (trainingSet):
     dictProbs = {}
     numberValues = {}
@@ -119,13 +131,14 @@ def probsForVDM (trainingSet):
     # print dictProbs
     return dictProbs
 
+# Value difference measure implementation
 def vdm(val1, val2, dictProbs, n):
     total = 0
     for index, attrubutesPerClass in dictProbs.items():
         if(val1 in attrubutesPerClass) and (val2 in attrubutesPerClass):
-            cost = abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n*1.0
+            cost = abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n
             #print "P(%s | %s) - P(%s | %s) = %f " %(index, val1, index, val2, cost)
-            total += abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n*1.0
+            total += abs(attrubutesPerClass[val1] - attrubutesPerClass[val2])**n
     #print "Total: %f" % (total)
     return total
 
@@ -145,8 +158,6 @@ class Problem:
     def normalizeNumericalAttr ( self ):
         # storing the minimum and the maximum value
         # of each attribute in dictionary
-        #minValues = self.instances[0]._values[:]
-        #maxValues = self.instances[0]._values[:]
         minValues = deepcopy ( self.instances[0]._values )
         maxValues = deepcopy ( self.instances[0]._values )
 
@@ -166,12 +177,13 @@ class Problem:
 
         return
 
-
-    def prediction( self, trainingSet, instance, k):
+    # Given a test instance, 
+    # it will return the predicted class/number
+    def prediction( self, trainingSet, instance, k, details ):
         return
     # Used for cross-validation
     # Evaluates one test instance against the splitted training data
-    def evaluate ( self, lhs, newInstances, k ):
+    def evaluate ( self, lhs, newInstances, k, details ):
         return
     # Do the final operations to get the correct evaluation
     def endEvaluation ( self ):
@@ -186,15 +198,15 @@ class Classification ( Problem ):
         self.accuracy = 0
         Problem.__init__ ( self, filename )     # super
         
-    def prediction( self, trainingSet, instance, k, type):
+    def prediction( self, trainingSet, instance, k, type, details ):
         if ( type == 'knn' ):
-            predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k))
+            predictedClass = defineClass_kNN(getNeighbours(trainingSet, instance, k, details))
         else:
-            predictedClass = weightedClassification(getNeighbours(trainingSet, instance, k))
+            predictedClass = weightedClassification(getNeighbours(trainingSet, instance, k, details))
         return predictedClass;
 
-    def evaluate ( self, lhs, newInstances, k, type='knn' ):
-        rhs = self.prediction ( newInstances, lhs, k, type )
+    def evaluate ( self, lhs, newInstances, k, type='knn', details = [] ):
+        rhs = self.prediction ( newInstances, lhs, k, type, details )
         self.accuracy += lhs._values[-1] == rhs
 
     def endEvaluation ( self ):
@@ -217,15 +229,15 @@ class NumericalPrediction ( Problem ):
 
     # The predicted number is the average of the 
     # k nearest neighbours or wnn
-    def prediction( self, trainingSet, instance, k, type ):
+    def prediction( self, trainingSet, instance, k, type, details ):
         if ( type == 'knn' ):
-            predictedNumber = numericalPrediction(getNeighbours(trainingSet, instance, k))
+            predictedNumber = numericalPredictionKNN(getNeighbours(trainingSet, instance, k, details))
         else:
-            predictedNumber = weightedNumericalPrediction(getNeighbours(trainingSet, instance, k))
+            predictedNumber = weightedNumericalPrediction(getNeighbours(trainingSet, instance, k, details))
         return predictedNumber;
 
-    def evaluate ( self, lhs, newInstances, k, type='knn' ):
-        rhs = self.prediction ( newInstances, lhs, k, type )
+    def evaluate ( self, lhs, newInstances, k, type='knn', details = [] ):
+        rhs = self.prediction ( newInstances, lhs, k, type, details )
 
         self.meanAbsError += abs ( float ( lhs._values[-1] ) - rhs )
         self.relativeAbsError += abs ( rhs - self.average )
