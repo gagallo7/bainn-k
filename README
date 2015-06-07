@@ -1,0 +1,16 @@
+Falcon team
+Guilherme Alcarde Gallo       z5030891
+Pedro Lucas Albuquerque       z5046915
+
+This is a program that perform the well know k-nn and w-nn machine learning algorithms in order to predict a classification data and numerical regression one, represented, respectfully, by the files ionosphere.arff and autos.arff.
+
+Some variants of the cited algorithms have been implemented, like Value Difference Measure and Ln-norm.
+
+USAGE:
+    Simple Syntax:
+        
+    
+
+
+EXAMPLE:
+    c k 5: Pick classification data and use the k-nn algorithm
