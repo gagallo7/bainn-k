@@ -98,7 +98,7 @@ def iterativeMode () :
     while ( op != 'q' ):
         # The given problems
         c = Classification("ionosphere.arff")
-        num = NumericalPrediction("autos3.arff")
+        num = NumericalPrediction("autos.arff")
 
         op = raw_input("Command ('q' to quit, 'h' for help): ")
 
