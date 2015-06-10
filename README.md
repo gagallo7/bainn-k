@@ -5,7 +5,7 @@
 - [x] select the k instances (finish the function)
 - [x] calculate numerical distances
 - [ ] Implement Value Difference Measure
-- [ ] Implement Normalization/Standardization
+- [x] Implement Normalization/Standardization
 - [ ] Evaluation with different methods
 
 Optional:

@@ -1,0 +1,33 @@
+n k 1
+n k 2
+n k 3
+n k 4
+n k 5
+n k 10
+n k 15
+n k 20
+
+n k 2 b 2
+n k 2 v 2
+
+n k 2 v 1
+n k 2 v 3
+n k 2 v 10
+
+n w 1
+n w 2
+n w 3
+n w 4
+n w 5
+n w 10
+n w 15
+n w 20
+
+n w 4 b 2
+n w 4 v 2
+
+n w 4 v 1
+n w 4 v 3
+n w 4 v 10
+
+q

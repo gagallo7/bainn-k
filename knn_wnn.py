@@ -61,8 +61,10 @@ def weightedNumericalPrediction(neighbours):
 def getNeighbours(trainingSet, instance, k, details):
     dist = []
     length = len(instance) - 1
+    dictProbs = {}
 
-    dictProbs = probsForVDM (trainingSet)
+    if ( details != [] and details[1] == 2 ):
+        dictProbs = probsForVDM (trainingSet)
 
     for x in range(len(trainingSet)):
         if details == []:
@@ -75,7 +77,7 @@ def getNeighbours(trainingSet, instance, k, details):
     return heapq.nsmallest(k, dist)
 
 # L-n distance
-def LnDist(i1, i2, length, dictProbs, n = 2, useVDM = False):
+def LnDist(i1, i2, length, dictProbs, n = 2, nominalEvaluation = 0 ):
     dist = 0
     n = float (n)
     # Treating Manhattan-Distance Ln = 0
@@ -84,19 +86,13 @@ def LnDist(i1, i2, length, dictProbs, n = 2, useVDM = False):
     for x in range(length):
         if type ( i1[x] ) != type ( str() ):
             dist += abs ( (i1[x] - i2[x])**n )
-            #pointo = (abs ( (i1[x] - i2[x])**n ))
-            #print "Points: (%f %f) %s"% (i1[x], i2[x], pointo)
-        else:
-
+        elif nominalEvaluation > 0:
             if ( i1[x] != i2[x] ):
-                if ( useVDM ):
+                if ( nominalEvaluation == 2 ):
                     dist += vdm(i1[x], i2[x], dictProbs, n)
                 else:
                     dist += 1
-                #vdmresult = vdm(i1[x], i2[x], dictProbs, 2)
-                #dist += vdmresult
 
-    #return math.sqrt(dist)
     return float ( dist**div )
 
 # Storing the probabilities attribute given class
@@ -150,6 +146,8 @@ def vdm(val1, val2, dictProbs, n):
 class Problem:
     def __init__(self, filename):
         self.instances = []
+        self.errors = []
+        self.k = 0
 
         for row in arff.load(filename):
             self.instances.append(row);
@@ -191,6 +189,15 @@ class Problem:
     def printError ( self ):
         return
 
+    # Store the results in the results.txt file
+    def logError ( self, command = "" ):
+        f = open ( 'results.txt', 'a' )
+        if command != "":
+            f.write ( command + ", " )
+        for e in self.errors: f.write ( str(e) + ", " )
+        f.write ( '\n' )
+        f.close()
+
 # Specializes Problem into a Classification problem
 class Classification ( Problem ):
 
@@ -211,9 +218,10 @@ class Classification ( Problem ):
 
     def endEvaluation ( self ):
         self.accuracy = self.accuracy / float ( len ( self.instances ) )
+        self.errors.append ( "{0:2.4f}".format ( self.accuracy*100 ) )
 
     def printError ( self ):
-        accStr = "Accuracy: {0:2.4f}%".format ( self.accuracy*100 )
+        accStr = "Accuracy: {}%".format ( self.errors[0] )
         print accStr
 
 # Specializes Problem into a Regression problem
@@ -237,23 +245,27 @@ class NumericalPrediction ( Problem ):
         return predictedNumber;
 
     def evaluate ( self, lhs, newInstances, k, type='knn', details = [] ):
-        rhs = self.prediction ( newInstances, lhs, k, type, details )
+        predicted = self.prediction ( newInstances, lhs, k, type, details )
+        actual = float ( lhs._values[-1] )
 
-        self.meanAbsError += abs ( float ( lhs._values[-1] ) - rhs )
-        self.relativeAbsError += abs ( rhs - self.average )
-        self.rootedSquaredError += ( rhs - self.average )**2
-
+        self.meanAbsError += abs ( actual - predicted )
+        self.relativeAbsError += abs ( actual - self.average )
+        self.rootedSquaredError += ( predicted - actual )**2
+  
     def endEvaluation ( self ):
         # The relative and mean abs error have the numerator in common
         self.relativeAbsError = self.meanAbsError / self.relativeAbsError
         self.meanAbsError = self.meanAbsError / float ( len ( self.instances ) )
-
         self.rootedSquaredError = math.sqrt ( self.rootedSquaredError / float ( len ( self.instances ) ) )
+        self.errors.append ( "" )   # there is no accuracy
+        self.errors.append ( "{0:2.4f}".format ( self.meanAbsError ) )
+        self.errors.append ( "{0:2.4f}".format ( self.relativeAbsError*100 ) )
+        self.errors.append ( "{0:2.4f}".format ( self.rootedSquaredError ) )
 
     def printError ( self ):
-        meanAbsoluteErrorStr =  "Mean absolute error:     {0:2.4f}".format ( self.meanAbsError )
-        relativeAbsErrorStr =   "Relative absolute error:   {0:2.4f}%".format ( self.relativeAbsError*100 )
-        rootedSquaredErrorStr = "Root Squared error:      {0:2.4f}".format ( self.rootedSquaredError )
+        meanAbsoluteErrorStr =  "Mean absolute error:     {}".format ( self.errors[1] )
+        relativeAbsErrorStr =   "Relative absolute error:   {}%".format ( self.errors[2] ) 
+        rootedSquaredErrorStr = "Root Squared error:      {}".format ( self.errors[3] )
         print meanAbsoluteErrorStr
         print relativeAbsErrorStr
         print rootedSquaredErrorStr

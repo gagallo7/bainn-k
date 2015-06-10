@@ -16,10 +16,13 @@ from collections import deque
 
 import re
 
+
+lastCommand = ""
+
 # Parser for user's command
 def parse ( c, num, op ):
     optArgs = True
-    parsed = re.match(r'([cn]) * ([wk]).* (\d+).* ([yn]).* ([\.\d]+)', op, re.M|re.I )
+    parsed = re.match(r'([cn]) * ([wk]).* (\d+).* ([biv]).* ([\.\d]+)', op, re.M|re.I )
 
     # Without optional args
     if parsed == None:
@@ -52,52 +55,65 @@ def parse ( c, num, op ):
         if float ( parsed.group(5) ) < 0:
             raise NameError('Bad Ln value: Ln < 0')
                 
-        msg += "|| Ln-norm of " + parsed.group(5) + ", "
+        msg += "  || Ln-norm of " + parsed.group(5) + ", "
         details.append ( float ( parsed.group(5) ) )
 
-        if ( parsed.group(4) == 'y' ):
-            msg += " VDM enabled"
-            details.append (True)
+        if ( parsed.group(4) == 'v' ):
+            msg += "VDM enabled"
+            details.append (2)
+        elif ( parsed.group(4) == 'b' ):
+            msg += "Binary distance for nominal"
+            details.append (1)
         else:
-            msg += " VDM disabled"
-            details.append (False)
+            msg += "Ignore Nominal Attributes"
+            details.append (0)
 
     command.append ( details )
     print msg
 
     if ( parsed.group(1)[0] == 'c' ):
-        loocv_classes ( c, *command )
+        loocv_classes ( op, c, *command )
     else:
-        loocv_classes ( num, *command )
+        loocv_classes ( op, num, *command )
 
+def printHelp ():
+    print "\nSyntax: <problem> <nn-type> <k-value> <nominal-dist> <Ln-norm>"
+    print "Required parameters"
+    print "\tproblem: 'c' for Classification, 'n' for Numerical Regression"
+    print "\tnn-type: 'w' for w-nn, 'k' for k-nn"
+    print "\tk-value: integer >= 1"
+    print "Optional parameters (Both required)"
+    print "\tnominal-dist: 'b' for binary distance 'v' for VDM or 'i' to ignore nominal attributes. (default 'i')"
+    print "\t\tUse binary or value difference measure to calculate distance among nominal attributes"
+    print "\tLn-norm: real number >= 0. (default 2.0)" 
+    print "\t\tUsed to calculate distances."
+    print "\t"
+        
 # Make the program flexible to user's input
 def iterativeMode () :
     op = ''
 
-    while ( op != 'q' ):
-        print "\nSyntax: <problem> <nn-type> <k-value> <VDM> <Ln-norm>"
-        print "Required parameters"
-        print "\tproblem: 'c' for Classification, 'n' for Numerical Regression"
-        print "\tnn-type: 'w' for w-nn, 'k' for k-nn"
-        print "\tk-value: integer >= 1"
-        print "Optional parameters (Both required)"
-        print "\tVDM: 'y' or 'n'. (default 'n')"
-        print "\t\tUse value difference measure to calculate distance among nominal attributes"
-        print "\tLn-norm: real number >= 0. (default 2.0)" 
-        print "\t\tUsed to calculate distances."
-        print "\t"
+    printHelp()
 
-        op = raw_input("Command ('q' to quit): ")
+    while ( op != 'q' ):
+        # The given problems
+        c = Classification("ionosphere.arff")
+        num = NumericalPrediction("autos3.arff")
+
+        op = raw_input("Command ('q' to quit, 'h' for help): ")
 
         if ( op == 'q' ):
             break
+        elif ( op == 'h' ):
+            printHelp()
+            continue
         elif op:
             parse (c, num, op)
         
     print ''
 
 # Leave-one-out-cross-validation
-def loocv_classes(problem, k, type='knn', details = []):
+def loocv_classes(command, problem, k, type='knn', details = []):
 
     # Too expensive to copy the whole list
     newInstances = deque(problem.instances)
@@ -112,11 +128,9 @@ def loocv_classes(problem, k, type='knn', details = []):
 
     problem.endEvaluation()
     problem.printError()
+    problem.logError( command )
 
 
-# The given problems
-c = Classification("ionosphere.arff")
-num = NumericalPrediction("autos3.arff")
 
 # Activating iterative mode
 iterativeMode()
